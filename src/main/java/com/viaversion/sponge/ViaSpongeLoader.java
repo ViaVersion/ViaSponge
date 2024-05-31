@@ -45,10 +45,10 @@ import java.util.stream.Collectors;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.Platform;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.util.Ticks;
 import org.spongepowered.plugin.PluginContainer;
@@ -86,11 +86,12 @@ public final class ViaSpongeLoader implements ViaPlatform<Player> {
     }
 
     public void onServerStart() {
-        // Can't use the command register event for raw commands...
-        Sponge.server().commandManager().registrar(Command.Raw.class).get().register(container, (Command.Raw) Via.getManager().getCommandHandler(), "viaversion", "viaver", "vvsponge");
-
         final ViaManagerImpl manager = (ViaManagerImpl) Via.getManager();
         manager.init();
+    }
+
+    public void onCommandRegister(final RegisterCommandEvent<Command.Raw> event) {
+        event.register(container, (Command.Raw) Via.getManager().getCommandHandler(), "viaversion", "viaver", "vvsponge");
     }
 
     public void onServerStarted() {

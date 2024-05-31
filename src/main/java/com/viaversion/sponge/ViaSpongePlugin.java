@@ -22,13 +22,14 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import net.lenni0451.reflect.ClassLoaders;
-import net.lenni0451.reflect.stream.RStream;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.Server;
+import org.spongepowered.api.command.Command;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.lifecycle.ConstructPluginEvent;
+import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
 import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
 import org.spongepowered.api.event.lifecycle.StartingEngineEvent;
 import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
@@ -62,6 +63,11 @@ public class ViaSpongePlugin {
     @Listener
     public void onServerStart(final StartingEngineEvent<Server> event) {
         ((ViaSpongeLoader) platform).onServerStart();
+    }
+
+    @Listener
+    public void onCommandRegister(final RegisterCommandEvent<Command.Raw> event) {
+        ((ViaSpongeLoader) platform).onCommandRegister(event);
     }
 
     @Listener
