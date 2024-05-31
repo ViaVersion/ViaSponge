@@ -83,6 +83,24 @@ public final class ViaSpongeLoader implements ViaPlatform<Player> {
             .loader(new SpongeViaLoader(this))
             .build());
         conf.reload();
+
+        if (hasClass("com.viaversion.viabackwards.api.ViaBackwardsPlatform")) {
+            getLogger().info("Found ViaBackwards, loading it");
+            Via.getManager().addEnableListener(() -> new ViaBackwardsLoader(getLogger(), getDataFolder()));
+        }
+        if (hasClass("com.viaversion.viarewind.api.ViaRewindPlatform")) {
+            getLogger().info("Found ViaRewind, loading it");
+            Via.getManager().addEnableListener(() -> new ViaRewindLoader(getLogger(), getDataFolder()));
+        }
+    }
+
+    private boolean hasClass(final String name) {
+        try {
+            Class.forName(name);
+            return true;
+        } catch (final ClassNotFoundException ignored) {
+            return false;
+        }
     }
 
     public void onServerStart() {
