@@ -20,24 +20,21 @@ package com.viaversion.sponge.handlers;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.exception.CancelCodecException;
 import com.viaversion.viaversion.exception.CancelDecoderException;
-import com.viaversion.viaversion.util.PipelineUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
 
-public class SpongeDecodeHandler extends ByteToMessageDecoder {
+public class SpongeDecodeHandler extends MessageToMessageDecoder<ByteBuf> {
 
-    private final ByteToMessageDecoder minecraftDecoder;
     private final UserConnection info;
 
-    public SpongeDecodeHandler(UserConnection info, ByteToMessageDecoder minecraftDecoder) {
+    public SpongeDecodeHandler(UserConnection info) {
         this.info = info;
-        this.minecraftDecoder = minecraftDecoder;
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf bytebuf, List<Object> list) throws Exception {
+    protected void decode(final ChannelHandlerContext ctx, final ByteBuf bytebuf, final List<Object> out) {
         if (!info.checkServerboundPacket()) {
             bytebuf.clear(); // Don't accumulate
             throw CancelDecoderException.generate(null);
@@ -49,8 +46,7 @@ public class SpongeDecodeHandler extends ByteToMessageDecoder {
                 transformedBuf = ctx.alloc().buffer().writeBytes(bytebuf);
                 info.transformServerbound(transformedBuf, CancelDecoderException::generate);
             }
-
-            list.addAll(PipelineUtil.callDecode(this.minecraftDecoder, ctx, transformedBuf == null ? bytebuf : transformedBuf));
+            out.add(transformedBuf != null ? transformedBuf.retain() : bytebuf.retain());
         } finally {
             if (transformedBuf != null) {
                 transformedBuf.release();

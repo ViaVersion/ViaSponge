@@ -20,48 +20,36 @@ package com.viaversion.sponge.handlers;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.exception.CancelCodecException;
 import com.viaversion.viaversion.exception.CancelEncoderException;
-import com.viaversion.viaversion.handlers.ChannelHandlerContextWrapper;
-import com.viaversion.viaversion.handlers.ViaCodecHandler;
-import com.viaversion.viaversion.util.PipelineUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToByteEncoder;
-import java.lang.reflect.InvocationTargetException;
+import io.netty.handler.codec.MessageToMessageEncoder;
+import java.util.List;
 
-public class SpongeEncodeHandler extends MessageToByteEncoder<Object> implements ViaCodecHandler {
+public class SpongeEncodeHandler extends MessageToMessageEncoder<ByteBuf> {
     private final UserConnection info;
-    private final MessageToByteEncoder<?> minecraftEncoder;
 
-    public SpongeEncodeHandler(UserConnection info, MessageToByteEncoder<?> minecraftEncoder) {
+    public SpongeEncodeHandler(UserConnection info) {
         this.info = info;
-        this.minecraftEncoder = minecraftEncoder;
     }
 
     @Override
-    protected void encode(final ChannelHandlerContext ctx, Object o, final ByteBuf bytebuf) throws Exception {
-        // handle the packet type
-        if (!(o instanceof ByteBuf buf)) {
-            // call minecraft encoder
-            try {
-                PipelineUtil.callEncode(this.minecraftEncoder, new ChannelHandlerContextWrapper(ctx, this), o, bytebuf);
-            } catch (InvocationTargetException e) {
-                if (e.getCause() instanceof Exception cause) {
-                    throw cause;
-                } else if (e.getCause() instanceof Error cause) {
-                    throw cause;
-                }
-            }
-        } else {
-            bytebuf.writeBytes(buf);
+    protected void encode(final ChannelHandlerContext ctx, final ByteBuf byteBuf, final List<Object> out) {
+        if (!info.checkClientboundPacket()) {
+            throw CancelEncoderException.generate(null);
         }
-        transform(bytebuf);
-    }
+        if (!info.shouldTransformPacket()) {
+            out.add(byteBuf.retain());
+            return;
+        }
 
-    @Override
-    public void transform(ByteBuf bytebuf) throws Exception {
-        if (!info.checkClientboundPacket()) throw CancelEncoderException.generate(null);
-        if (!info.shouldTransformPacket()) return;
-        info.transformClientbound(bytebuf, CancelEncoderException::generate);
+        final ByteBuf transformedBuf = ctx.alloc().buffer().writeBytes(byteBuf);
+        try {
+            info.transformClientbound(transformedBuf, CancelEncoderException::generate);
+
+            out.add(transformedBuf.retain());
+        } finally {
+            transformedBuf.release();
+        }
     }
 
     @Override

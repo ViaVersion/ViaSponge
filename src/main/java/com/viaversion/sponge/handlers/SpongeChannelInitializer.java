@@ -22,11 +22,13 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.connection.UserConnectionImpl;
 import com.viaversion.viaversion.platform.WrappedChannelInitializer;
 import com.viaversion.viaversion.protocol.ProtocolPipelineImpl;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.ByteToMessageDecoder;
-import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty.handler.codec.MessageToMessageDecoder;
+import io.netty.handler.codec.MessageToMessageEncoder;
 import java.lang.reflect.Method;
 
 public class SpongeChannelInitializer extends ChannelInitializer<Channel> implements WrappedChannelInitializer {
@@ -57,12 +59,16 @@ public class SpongeChannelInitializer extends ChannelInitializer<Channel> implem
             new ProtocolPipelineImpl(info);
             // Add originals
             INIT_CHANNEL_METHOD.invoke(this.original, channel);
+            // Get the pipeline
+            final ChannelPipeline pipeline = channel.pipeline();
+            // Get the encoder name
+            final String encoderName = pipeline.get("outbound_config") != null ? "outbound_config" : "encoder";
             // Add our transformers
-            MessageToByteEncoder encoder = new SpongeEncodeHandler(info, (MessageToByteEncoder) channel.pipeline().get("encoder"));
-            ByteToMessageDecoder decoder = new SpongeDecodeHandler(info, (ByteToMessageDecoder) channel.pipeline().get("decoder"));
+            MessageToMessageEncoder<ByteBuf> encoder = new SpongeEncodeHandler(info);
+            MessageToMessageDecoder<ByteBuf> decoder = new SpongeDecodeHandler(info);
 
-            channel.pipeline().replace("encoder", "encoder", encoder);
-            channel.pipeline().replace("decoder", "decoder", decoder);
+            channel.pipeline().addBefore(encoderName, "via-encoder", encoder);
+            channel.pipeline().addBefore("decoder", "via-decoder", decoder);
         } else {
             INIT_CHANNEL_METHOD.invoke(this.original, channel);
         }
