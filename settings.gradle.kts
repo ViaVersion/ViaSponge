@@ -1,4 +1,4 @@
-rootProject.name = "viaversionsponge"
+rootProject.name = "viasponge"
 
 dependencyResolutionManagement {
     repositories {

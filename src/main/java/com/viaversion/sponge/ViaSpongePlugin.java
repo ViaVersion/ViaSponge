@@ -19,9 +19,12 @@ package com.viaversion.sponge;
 
 import com.google.inject.Inject;
 import java.io.File;
-import java.net.MalformedURLException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
-import net.lenni0451.reflect.ClassLoaders;
+import net.lenni0451.reflect.Methods;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.Server;
@@ -56,7 +59,11 @@ public class ViaSpongePlugin {
 
     @Listener
     public void constructPlugin(final ConstructPluginEvent event) {
-        loadImplementation();
+        try {
+            loadImplementation();
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
         platform = new ViaSpongeLoader(container, game, logger, configDir);
     }
 
@@ -80,27 +87,25 @@ public class ViaSpongePlugin {
         ((ViaSpongeLoader) platform).onServerStop();
     }
 
-    private void loadImplementation() {
+    private void loadImplementation() throws Exception {
         final File[] files = configDir.toFile().listFiles();
         if (files == null || files.length == 0) {
             throw new IllegalArgumentException("You need to place the main ViaVersion jar in config/viaversion/");
         }
 
+        // Cursedness to get to the actual classloader
+        final ClassLoader classLoader = ViaSpongePlugin.class.getClassLoader();
+        final Field delegatedClassLoaderField = classLoader.getClass().getDeclaredField("delegatedClassLoader");
+        delegatedClassLoaderField.setAccessible(true);
+        final URLClassLoader urlClassLoader = (URLClassLoader) delegatedClassLoaderField.get(classLoader);
+        final Method addURL = Methods.getDeclaredMethod(URLClassLoader.class, "addURL", URL.class);
+
         boolean found = false;
-        final ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
-        try {
-            final ClassLoader actualLoader = null; // TODO Where is it hiding
-            Thread.currentThread().setContextClassLoader(actualLoader);
-            for (final File file : files) {
-                if (file.getName().endsWith(".jar")) {
-                    ClassLoaders.loadToFront(file.toURI().toURL());
-                    found = true;
-                }
+        for (final File file : files) {
+            if (file.getName().endsWith(".jar")) {
+                Methods.invoke(urlClassLoader, addURL, file.toURI().toURL());
+                found = true;
             }
-        } catch (final MalformedURLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            Thread.currentThread().setContextClassLoader(oldLoader);
         }
 
         if (!found) {
