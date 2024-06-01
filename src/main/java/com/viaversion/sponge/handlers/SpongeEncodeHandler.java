@@ -20,20 +20,27 @@ package com.viaversion.sponge.handlers;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.exception.CancelCodecException;
 import com.viaversion.viaversion.exception.CancelEncoderException;
+import com.viaversion.viaversion.util.PipelineUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.MessageToByteEncoder;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import java.util.List;
 
+@ChannelHandler.Sharable
 public class SpongeEncodeHandler extends MessageToMessageEncoder<ByteBuf> {
     private final UserConnection info;
+    private boolean handledCompression;
 
-    public SpongeEncodeHandler(UserConnection info) {
+    public SpongeEncodeHandler(final UserConnection info) {
         this.info = info;
     }
 
     @Override
-    protected void encode(final ChannelHandlerContext ctx, final ByteBuf byteBuf, final List<Object> out) {
+    protected void encode(final ChannelHandlerContext ctx, final ByteBuf byteBuf, final List<Object> out) throws Exception {
         if (!info.checkClientboundPacket()) {
             throw CancelEncoderException.generate(null);
         }
@@ -44,7 +51,11 @@ public class SpongeEncodeHandler extends MessageToMessageEncoder<ByteBuf> {
 
         final ByteBuf transformedBuf = ctx.alloc().buffer().writeBytes(byteBuf);
         try {
+            final boolean needsCompression = !handledCompression && handleCompressionOrder(ctx, transformedBuf);
             info.transformClientbound(transformedBuf, CancelEncoderException::generate);
+            if (needsCompression) {
+                recompress(ctx, transformedBuf);
+            }
 
             out.add(transformedBuf.retain());
         } finally {
@@ -56,5 +67,40 @@ public class SpongeEncodeHandler extends MessageToMessageEncoder<ByteBuf> {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (cause instanceof CancelCodecException) return;
         super.exceptionCaught(ctx, cause);
+    }
+
+    private boolean handleCompressionOrder(final ChannelHandlerContext ctx, final ByteBuf buf) throws Exception {
+        final ChannelPipeline pipeline = ctx.pipeline();
+        final List<String> names = pipeline.names();
+        final int compressorIndex = names.indexOf("compress");
+        if (compressorIndex == -1) {
+            return false;
+        }
+
+        handledCompression = true;
+        if (compressorIndex > names.indexOf("via-encoder")) {
+            // Need to decompress this packet due to bad order
+            final ByteBuf decompressed = (ByteBuf) PipelineUtil.callDecode((ByteToMessageDecoder) pipeline.get("decompress"), ctx, buf).get(0);
+            try {
+                buf.clear().writeBytes(decompressed);
+            } finally {
+                decompressed.release();
+            }
+
+            pipeline.addAfter("compress", "via-encoder", pipeline.remove("via-encoder"));
+            pipeline.addAfter("decompress", "via-decoder", pipeline.remove("via-decoder"));
+            return true;
+        }
+        return false;
+    }
+
+    private void recompress(final ChannelHandlerContext ctx, final ByteBuf buf) throws Exception {
+        final ByteBuf compressed = ctx.alloc().buffer();
+        try {
+            PipelineUtil.callEncode((MessageToByteEncoder<ByteBuf>) ctx.pipeline().get("compress"), ctx, buf, compressed);
+            buf.clear().writeBytes(compressed);
+        } finally {
+            compressed.release();
+        }
     }
 }

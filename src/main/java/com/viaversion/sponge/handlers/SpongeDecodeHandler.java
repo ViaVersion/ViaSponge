@@ -21,22 +21,23 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.exception.CancelCodecException;
 import com.viaversion.viaversion.exception.CancelDecoderException;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
 
+@ChannelHandler.Sharable
 public class SpongeDecodeHandler extends MessageToMessageDecoder<ByteBuf> {
 
     private final UserConnection info;
 
-    public SpongeDecodeHandler(UserConnection info) {
+    public SpongeDecodeHandler(final UserConnection info) {
         this.info = info;
     }
 
     @Override
     protected void decode(final ChannelHandlerContext ctx, final ByteBuf bytebuf, final List<Object> out) {
         if (!info.checkServerboundPacket()) {
-            bytebuf.clear(); // Don't accumulate
             throw CancelDecoderException.generate(null);
         }
 
