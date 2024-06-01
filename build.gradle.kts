@@ -23,3 +23,9 @@ tasks {
         archiveFileName.set("ViaSponge-${project.version}.jar")
     }
 }
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
