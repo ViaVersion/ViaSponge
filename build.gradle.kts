@@ -1,6 +1,7 @@
 plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("java")
+    id("maven-publish")
 }
 
 group = "com.viaversion"
@@ -27,5 +28,24 @@ tasks {
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+
+publishing {
+    publications.create<MavenPublication>("mavenJava") {
+        groupId = rootProject.group as String
+        artifactId = "sponge"
+        version = rootProject.version as String
+
+        artifact(tasks["shadowJar"])
+    }
+    repositories.maven {
+        name = "Via"
+        url = uri("https://repo.viaversion.com/")
+        credentials(PasswordCredentials::class)
+        authentication {
+            create<BasicAuthentication>("basic")
+        }
     }
 }
