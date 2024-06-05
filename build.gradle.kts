@@ -31,7 +31,6 @@ java {
     }
 }
 
-
 publishing {
     publications.create<MavenPublication>("mavenJava") {
         groupId = rootProject.group as String
