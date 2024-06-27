@@ -19,17 +19,18 @@ package com.viaversion.sponge.platform;
 
 import com.viaversion.viaversion.configuration.AbstractViaConfig;
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class SpongeViaConfig extends AbstractViaConfig {
-    private static final List<String> UNSUPPORTED = Arrays.asList("bungee-ping-interval",
-        "bungee-ping-save", "bungee-servers", "velocity-ping-interval", "velocity-ping-save", "velocity-servers",
-        "quick-move-action-fix", "change-1_9-hitbox", "change-1_14-hitbox", "blockconnection-method");
+    protected final List<String> UNSUPPORTED = new ArrayList<>();
 
     public SpongeViaConfig(File folder, java.util.logging.Logger logger) {
         super(new File(folder, "config.yml"), logger);
+
+        UNSUPPORTED.addAll(BUKKIT_ONLY_OPTIONS);
+        UNSUPPORTED.addAll(VELOCITY_ONLY_OPTIONS);
     }
 
     @Override
