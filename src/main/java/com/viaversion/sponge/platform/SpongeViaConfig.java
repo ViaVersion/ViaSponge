@@ -27,7 +27,7 @@ public class SpongeViaConfig extends AbstractViaConfig {
     protected final List<String> UNSUPPORTED = new ArrayList<>();
 
     public SpongeViaConfig(File folder, java.util.logging.Logger logger) {
-        super(new File(folder, "config.yml"), logger);
+        super(new File(folder, "viaversion.yml"), logger);
 
         UNSUPPORTED.addAll(BUKKIT_ONLY_OPTIONS);
         UNSUPPORTED.addAll(VELOCITY_ONLY_OPTIONS);
