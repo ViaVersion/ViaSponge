@@ -12,7 +12,7 @@ dependencies {
     compileOnly("com.viaversion:viarewind-common:4.0.2")
     compileOnly("net.raphimc:viaaprilfools-common:3.0.1")
     compileOnly("io.netty:netty-all:4.0.20.Final")
-    compileOnly("org.spongepowered:spongeapi:8.0.0")
+    compileOnly("org.spongepowered:spongeapi:11.0.0")
     implementation("net.lenni0451:Reflect:1.3.4")
 }
 
