@@ -34,7 +34,7 @@
       },
       {
         "name": "EnZaXD",
-        "description": "Contributor"
+        "description": "Maintainer"
       },
       {
         "name": "RK_01",
@@ -53,8 +53,8 @@
   },
   "plugins": [
     {
-      "id": "viaversion",
-      "name": "ViaVersion",
+      "id": "viasponge",
+      "name": "ViaSponge",
       "entrypoint": "com.viaversion.sponge.ViaSpongePlugin",
       "description": "Loader for the main ViaVersion implementation"
     }
