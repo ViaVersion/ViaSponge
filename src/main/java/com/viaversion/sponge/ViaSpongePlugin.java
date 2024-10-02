@@ -18,13 +18,7 @@
 package com.viaversion.sponge;
 
 import com.google.inject.Inject;
-import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
-import net.lenni0451.reflect.Methods;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.Server;
@@ -39,7 +33,7 @@ import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.builtin.jvm.Plugin;
 
-@Plugin("viaversion")
+@Plugin("viasponge")
 public class ViaSpongePlugin {
 
     private final PluginContainer container;
@@ -59,11 +53,6 @@ public class ViaSpongePlugin {
 
     @Listener
     public void constructPlugin(final ConstructPluginEvent event) {
-        try {
-            loadImplementation();
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
         platform = new ViaSpongeLoader(container, game, logger, configDir);
     }
 
@@ -87,29 +76,4 @@ public class ViaSpongePlugin {
         ((ViaSpongeLoader) platform).onServerStop();
     }
 
-    private void loadImplementation() throws Exception {
-        final File[] files = configDir.toFile().listFiles();
-        if (files == null || files.length == 0) {
-            throw new IllegalArgumentException("You need to place the main ViaVersion jar in config/viaversion/");
-        }
-
-        // Cursedness to get to the actual classloader
-        final ClassLoader classLoader = ViaSpongePlugin.class.getClassLoader();
-        final Field delegatedClassLoaderField = classLoader.getClass().getDeclaredField("delegatedClassLoader");
-        delegatedClassLoaderField.setAccessible(true);
-        final URLClassLoader urlClassLoader = (URLClassLoader) delegatedClassLoaderField.get(classLoader);
-        final Method addURL = Methods.getDeclaredMethod(URLClassLoader.class, "addURL", URL.class);
-
-        boolean found = false;
-        for (final File file : files) {
-            if (file.getName().endsWith(".jar")) {
-                Methods.invoke(urlClassLoader, addURL, file.toURI().toURL());
-                found = true;
-            }
-        }
-
-        if (!found) {
-            throw new IllegalArgumentException("You need to place the main ViaVersion jar in config/viaversion/");
-        }
-    }
 }
