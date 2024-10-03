@@ -18,6 +18,9 @@
 
 package com.viaversion.sponge;
 
+import com.viaversion.viaversion.api.Via;
+import com.viaversion.viaversion.api.protocol.version.VersionProvider;
+import net.raphimc.viaaprilfools.api.VAFServerVersionProvider;
 import net.raphimc.viaaprilfools.platform.ViaAprilFoolsPlatform;
 import java.io.File;
 import java.util.logging.Logger;
@@ -28,6 +31,9 @@ public record ViaAprilFoolsLoader(Logger logger, File dataFolder) implements Via
         this.logger = logger;
         this.dataFolder = dataFolder;
         this.init(new File(this.dataFolder, "viaaprilfools.yml"));
+
+        final VersionProvider delegate = Via.getManager().getProviders().get(VersionProvider.class);
+        Via.getManager().getProviders().use(VersionProvider.class, new VAFServerVersionProvider(delegate));
     }
 
     @Override
