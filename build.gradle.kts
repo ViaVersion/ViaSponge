@@ -7,7 +7,7 @@ group = "com.viaversion"
 version = "1.1.1"
 
 dependencies {
-    compileOnly("com.viaversion:viaversion-common:5.1.0")
+    compileOnly("com.viaversion:viaversion-common:5.1.1")
     compileOnly("com.viaversion:viabackwards-common:5.1.0")
     compileOnly("com.viaversion:viarewind-common:4.0.2")
     compileOnly("net.raphimc:viaaprilfools-common:3.0.1")
