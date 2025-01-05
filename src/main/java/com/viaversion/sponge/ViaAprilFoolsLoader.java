@@ -18,10 +18,10 @@
 
 package com.viaversion.sponge;
 
+import com.viaversion.viaaprilfools.api.VAFServerVersionProvider;
+import com.viaversion.viaaprilfools.platform.ViaAprilFoolsPlatform;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.protocol.version.VersionProvider;
-import net.raphimc.viaaprilfools.api.VAFServerVersionProvider;
-import net.raphimc.viaaprilfools.platform.ViaAprilFoolsPlatform;
 import java.io.File;
 import java.util.logging.Logger;
 
