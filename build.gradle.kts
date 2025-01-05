@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.viaversion"
-version = "1.1.1"
+version = "1.2.0"
 
 dependencies {
     compileOnly("com.viaversion:viaversion-common:5.2.1")

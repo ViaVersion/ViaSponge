@@ -5,7 +5,7 @@
   },
   "license": "GNU GPLv3",
   "global": {
-    "version": "1.1.1",
+    "version": "1.2.0",
     "links": {
       "homepage": "https://modrinth.com/project/viasponge",
       "source": "https://github.com/ViaVersion/ViaSponge",
