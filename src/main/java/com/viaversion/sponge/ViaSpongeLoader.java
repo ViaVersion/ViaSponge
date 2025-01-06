@@ -196,11 +196,6 @@ public final class ViaSpongeLoader implements ViaPlatform<Player> {
     }
 
     @Override
-    public boolean isPluginEnabled() {
-        return true;
-    }
-
-    @Override
     public File getDataFolder() {
         return configDir.toFile();
     }
