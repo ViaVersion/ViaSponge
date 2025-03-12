@@ -18,11 +18,10 @@
 package com.viaversion.sponge;
 
 import com.viaversion.sponge.commands.SpongeCommandHandler;
-import com.viaversion.sponge.commands.SpongePlayer;
 import com.viaversion.sponge.util.LoggerWrapper;
 import com.viaversion.viaversion.ViaManagerImpl;
 import com.viaversion.viaversion.api.Via;
-import com.viaversion.viaversion.api.command.ViaCommandSender;
+import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.platform.PlatformTask;
 import com.viaversion.viaversion.api.platform.ViaPlatform;
 import com.viaversion.viaversion.dump.PluginInfo;
@@ -37,7 +36,6 @@ import com.viaversion.viaversion.util.VersionInfo;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -47,7 +45,6 @@ import org.spongepowered.api.Game;
 import org.spongepowered.api.Platform;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.util.Ticks;
@@ -172,23 +169,14 @@ public final class ViaSpongeLoader implements ViaPlatform<Player> {
     }
 
     @Override
-    public ViaCommandSender[] getOnlinePlayers() {
-        final Collection<ServerPlayer> players = game.server().onlinePlayers();
-        final ViaCommandSender[] array = new ViaCommandSender[players.size()];
-        int i = 0;
-        for (final ServerPlayer player : players) {
-            array[i++] = new SpongePlayer(player);
-        }
-        return array;
-    }
-
-    @Override
-    public void sendMessage(final UUID uuid, final String message) {
+    public void sendMessage(final UserConnection connection, final String message) {
+        final UUID uuid = connection.getProtocolInfo().getUuid();
         game.server().player(uuid).ifPresent(player -> player.sendMessage(LEGACY_SERIALIZER.deserialize(message)));
     }
 
     @Override
-    public boolean kickPlayer(final UUID uuid, final String message) {
+    public boolean kickPlayer(final UserConnection connection, final String message) {
+        final UUID uuid = connection.getProtocolInfo().getUuid();
         return game.server().player(uuid).map(player -> {
             player.kick(LegacyComponentSerializer.legacySection().deserialize(message));
             return true;
