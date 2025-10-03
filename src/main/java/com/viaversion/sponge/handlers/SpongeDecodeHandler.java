@@ -37,7 +37,7 @@ public class SpongeDecodeHandler extends MessageToMessageDecoder<ByteBuf> {
 
     @Override
     protected void decode(final ChannelHandlerContext ctx, final ByteBuf bytebuf, final List<Object> out) {
-        if (!info.checkServerboundPacket()) {
+        if (!info.checkServerboundPacket(bytebuf.readableBytes())) {
             throw CancelDecoderException.generate(null);
         }
 
