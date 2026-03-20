@@ -18,6 +18,14 @@
 
 package com.viaversion.sponge.util;
 
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.lifecycle.ConstructPluginEvent;
+
 public class DummyEntrypoint {
     // Dummy class for platform plugin metadata
+
+    @Listener
+    public void constructPlugin(final ConstructPluginEvent event) {
+        // Prevent a warning from being thrown.
+    }
 }
