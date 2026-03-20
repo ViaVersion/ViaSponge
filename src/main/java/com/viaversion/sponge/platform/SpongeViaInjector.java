@@ -28,7 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.MinecraftVersion;
 import org.spongepowered.api.Sponge;
 
-public class SpongeViaInjector extends LegacyViaInjector {
+public final class SpongeViaInjector extends LegacyViaInjector {
 
     @Override
     public ProtocolVersion getServerProtocolVersion() throws ReflectiveOperationException {

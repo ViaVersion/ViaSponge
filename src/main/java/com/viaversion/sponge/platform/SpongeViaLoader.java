@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.spongepowered.api.Sponge;
 
-public class SpongeViaLoader implements ViaPlatformLoader {
+public final class SpongeViaLoader implements ViaPlatformLoader {
 
     private final ViaSpongeLoader plugin;
 

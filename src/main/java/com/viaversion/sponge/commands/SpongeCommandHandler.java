@@ -29,7 +29,11 @@ import org.spongepowered.api.command.CommandCompletion;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.parameter.ArgumentReader;
 
-public class SpongeCommandHandler extends ViaCommandHandler implements Command.Raw {
+public final class SpongeCommandHandler extends ViaCommandHandler implements Command.Raw {
+
+    public SpongeCommandHandler() {
+        super(true);
+    }
 
     @Override
     public CommandResult process(CommandCause cause, ArgumentReader.Mutable arguments) {

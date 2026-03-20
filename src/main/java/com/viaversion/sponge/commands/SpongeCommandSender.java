@@ -24,7 +24,8 @@ import net.kyori.adventure.identity.Identity;
 import org.spongepowered.api.command.CommandCause;
 import org.spongepowered.api.util.Identifiable;
 
-public class SpongeCommandSender implements ViaCommandSender {
+public final class SpongeCommandSender implements ViaCommandSender {
+
     private final CommandCause source;
 
     public SpongeCommandSender(CommandCause source) {

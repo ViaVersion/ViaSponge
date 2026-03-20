@@ -17,7 +17,9 @@
  */
 package com.viaversion.sponge.handlers;
 
+import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
+import com.viaversion.viaversion.api.platform.ViaChannelHandler;
 import com.viaversion.viaversion.exception.CancelCodecException;
 import com.viaversion.viaversion.exception.CancelEncoderException;
 import com.viaversion.viaversion.util.PipelineUtil;
@@ -30,8 +32,11 @@ import io.netty.handler.codec.MessageToByteEncoder;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import java.util.List;
 
+import static com.viaversion.sponge.handlers.SpongeChannelInitializer.COMPRESS;
+import static com.viaversion.sponge.handlers.SpongeChannelInitializer.DECOMPRESS;
+
 @ChannelHandler.Sharable
-public class SpongeEncodeHandler extends MessageToMessageEncoder<ByteBuf> {
+public class SpongeEncodeHandler extends MessageToMessageEncoder<ByteBuf> implements ViaChannelHandler {
     private final UserConnection info;
     private boolean handledCompression;
 
@@ -72,23 +77,25 @@ public class SpongeEncodeHandler extends MessageToMessageEncoder<ByteBuf> {
     private boolean handleCompressionOrder(final ChannelHandlerContext ctx, final ByteBuf buf) throws Exception {
         final ChannelPipeline pipeline = ctx.pipeline();
         final List<String> names = pipeline.names();
-        final int compressorIndex = names.indexOf("compress");
+        final int compressorIndex = names.indexOf(COMPRESS);
         if (compressorIndex == -1) {
             return false;
         }
 
         handledCompression = true;
-        if (compressorIndex > names.indexOf("via-encoder")) {
+        final String encoder = Via.getManager().getInjector().getEncoderName();
+        if (compressorIndex > names.indexOf(encoder)) {
             // Need to decompress this packet due to bad order
-            final ByteBuf decompressed = (ByteBuf) PipelineUtil.callDecode((ByteToMessageDecoder) pipeline.get("decompress"), ctx, buf).get(0);
+            final ByteBuf decompressed = (ByteBuf) PipelineUtil.callDecode((ByteToMessageDecoder) pipeline.get(DECOMPRESS), ctx, buf).get(0);
             try {
                 buf.clear().writeBytes(decompressed);
             } finally {
                 decompressed.release();
             }
 
-            pipeline.addAfter("compress", "via-encoder", pipeline.remove("via-encoder"));
-            pipeline.addAfter("decompress", "via-decoder", pipeline.remove("via-decoder"));
+            final String decoder = Via.getManager().getInjector().getDecoderName();
+            pipeline.addAfter(COMPRESS, encoder, pipeline.remove(encoder));
+            pipeline.addAfter(DECOMPRESS, decoder, pipeline.remove(decoder));
             return true;
         }
         return false;
@@ -97,10 +104,15 @@ public class SpongeEncodeHandler extends MessageToMessageEncoder<ByteBuf> {
     private void recompress(final ChannelHandlerContext ctx, final ByteBuf buf) throws Exception {
         final ByteBuf compressed = ctx.alloc().buffer();
         try {
-            PipelineUtil.callEncode((MessageToByteEncoder<ByteBuf>) ctx.pipeline().get("compress"), ctx, buf, compressed);
+            PipelineUtil.callEncode((MessageToByteEncoder<ByteBuf>) ctx.pipeline().get(COMPRESS), ctx, buf, compressed);
             buf.clear().writeBytes(compressed);
         } finally {
             compressed.release();
         }
+    }
+
+    @Override
+    public UserConnection connection() {
+        return info;
     }
 }

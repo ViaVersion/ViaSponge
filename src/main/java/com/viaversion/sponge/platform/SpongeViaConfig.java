@@ -19,26 +19,18 @@ package com.viaversion.sponge.platform;
 
 import com.viaversion.viaversion.configuration.AbstractViaConfig;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-public class SpongeViaConfig extends AbstractViaConfig {
-    protected final List<String> UNSUPPORTED = new ArrayList<>();
+public final class SpongeViaConfig extends AbstractViaConfig {
 
     public SpongeViaConfig(File folder, java.util.logging.Logger logger) {
         super(new File(folder, "viaversion.yml"), logger);
-
-        UNSUPPORTED.addAll(BUKKIT_ONLY_OPTIONS);
-        UNSUPPORTED.addAll(VELOCITY_ONLY_OPTIONS);
-    }
-
-    @Override
-    protected void handleConfig(Map<String, Object> config) {
     }
 
     @Override
     public List<String> getUnsupportedOptions() {
-        return UNSUPPORTED;
+        final List<String> unsupported = super.getUnsupportedOptions();
+        unsupported.remove("check-for-updates");
+        return unsupported;
     }
 }

@@ -19,8 +19,10 @@ package com.viaversion.sponge.handlers;
 
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
+import com.viaversion.viaversion.api.platform.ViaInjector;
 import com.viaversion.viaversion.connection.UserConnectionImpl;
-import com.viaversion.viaversion.platform.WrappedChannelInitializer;
+import com.viaversion.viaversion.platform.ViaChannelInitializer;
+import com.viaversion.viaversion.platform.ViaDecodeHandler;
 import com.viaversion.viaversion.protocol.ProtocolPipelineImpl;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -29,53 +31,35 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.MessageToMessageEncoder;
-import java.lang.reflect.Method;
 
-public class SpongeChannelInitializer extends ChannelInitializer<Channel> implements WrappedChannelInitializer {
+public final class SpongeChannelInitializer extends ViaChannelInitializer {
 
-    private static final Method INIT_CHANNEL_METHOD;
-    private final ChannelInitializer<Channel> original;
+    public static final String DECODER = "decoder";
+    public static final String ENCODER = "encoder";
+    public static final String OUTBOUND_CONFIG = "outbound_config";
 
-    static {
-        try {
-            INIT_CHANNEL_METHOD = ChannelInitializer.class.getDeclaredMethod("initChannel", Channel.class);
-            INIT_CHANNEL_METHOD.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    public static final String COMPRESS = "compress";
+    public static final String DECOMPRESS = "decompress";
 
-    public SpongeChannelInitializer(ChannelInitializer<Channel> oldInit) {
-        this.original = oldInit;
+    public SpongeChannelInitializer(final ChannelInitializer<Channel> original) {
+        super(original, false);
     }
 
     @Override
-    protected void initChannel(Channel channel) throws Exception {
-        // Ensure ViaVersion is loaded
-        if (Via.getAPI().getServerVersion().isKnown()
-            && channel instanceof SocketChannel) { // channel can be LocalChannel on internal server
+    protected void injectPipeline(final ChannelPipeline pipeline, final UserConnection connection) {
+        final Channel channel = pipeline.channel();
+        if (Via.getAPI().getServerVersion().isKnown() && channel instanceof SocketChannel) { // channel can be LocalChannel on internal server
             UserConnection info = new UserConnectionImpl(channel);
-            // init protocol
             new ProtocolPipelineImpl(info);
-            // Add originals
-            INIT_CHANNEL_METHOD.invoke(this.original, channel);
-            // Get the pipeline
-            final ChannelPipeline pipeline = channel.pipeline();
-            // Get the encoder name
-            final String encoderName = pipeline.get("outbound_config") != null ? "outbound_config" : "encoder";
-            // Add our transformers
+
             MessageToMessageEncoder<ByteBuf> encoder = new SpongeEncodeHandler(info);
-            MessageToMessageDecoder<ByteBuf> decoder = new SpongeDecodeHandler(info);
+            MessageToMessageDecoder<ByteBuf> decoder = new ViaDecodeHandler(info);
 
-            channel.pipeline().addBefore(encoderName, "via-encoder", encoder);
-            channel.pipeline().addBefore("decoder", "via-decoder", decoder);
-        } else {
-            INIT_CHANNEL_METHOD.invoke(this.original, channel);
+            final ViaInjector injector = Via.getManager().getInjector();
+
+            final String encoderName = pipeline.get(OUTBOUND_CONFIG) != null ? OUTBOUND_CONFIG : ENCODER;
+            channel.pipeline().addBefore(encoderName, injector.getEncoderName(), encoder);
+            channel.pipeline().addBefore(DECODER, injector.getDecoderName(), decoder);
         }
-    }
-
-    @Override
-    public ChannelInitializer<Channel> original() {
-        return original;
     }
 }

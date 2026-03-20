@@ -22,7 +22,7 @@ import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 import org.spongepowered.api.entity.living.player.Player;
 
-public class SpongeViaAPI extends ViaAPIBase<Player> {
+public final class SpongeViaAPI extends ViaAPIBase<Player> {
 
     @Override
     public ProtocolVersion getPlayerProtocolVersion(Player player) {
