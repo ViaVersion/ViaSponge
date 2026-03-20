@@ -11,7 +11,7 @@ dependencies {
     compileOnly("com.viaversion:viabackwards-common:5.7.2")
     compileOnly("com.viaversion:viarewind-common:4.0.15")
     compileOnly("com.viaversion:viaaprilfools-common:4.0.9")
-    compileOnly("io.netty:netty-all:4.1.112.Final")
+    compileOnly("io.netty:netty-all:4.2.10.Final")
     compileOnly("org.spongepowered:spongeapi:8.0.0")
 }
 
