@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.viaversion"
-version = "1.2.1"
+version = "1.3.0-SNAPSHOT"
 
 dependencies {
     compileOnly("com.viaversion:viaversion-common:5.7.2")
@@ -21,6 +21,13 @@ tasks {
     }
     shadowJar {
         archiveFileName.set("ViaSponge-${project.version}.jar")
+    }
+
+    processResources {
+        val projectVersion = project.version
+        filesMatching("META-INF/sponge_plugins.json") {
+            expand(mapOf("version" to projectVersion))
+        }
     }
 }
 
