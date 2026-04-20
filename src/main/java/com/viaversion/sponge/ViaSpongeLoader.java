@@ -24,6 +24,7 @@ import com.viaversion.sponge.platform.SpongeViaInjector;
 import com.viaversion.sponge.platform.SpongeViaLoader;
 import com.viaversion.sponge.platform.SpongeViaTask;
 import com.viaversion.sponge.util.LoggerWrapper;
+import com.viaversion.viaaprilfools.ViaAprilFoolsPlatformImpl;
 import com.viaversion.viabackwards.ViaBackwardsPlatformImpl;
 import com.viaversion.viarewind.ViaRewindPlatformImpl;
 import com.viaversion.viaversion.ViaManagerImpl;
@@ -34,7 +35,6 @@ import com.viaversion.viaversion.api.platform.ViaPlatform;
 import com.viaversion.viaversion.dump.PluginInfo;
 import com.viaversion.viaversion.libs.gson.JsonObject;
 import com.viaversion.viaversion.util.GsonUtil;
-import com.viaversion.viaversion.util.VersionInfo;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -93,7 +93,7 @@ public final class ViaSpongeLoader implements ViaPlatform<Player> {
         }
         if (hasClass("com.viaversion.viaaprilfools.platform.ViaAprilFoolsPlatform")) {
             getLogger().info("Found ViaAprilFools, loading it");
-            Via.getManager().addEnableListener(ViaAprilFoolsLoader::new);
+            Via.getManager().addEnableListener(() -> new ViaAprilFoolsPlatformImpl(false));
         }
     }
 
